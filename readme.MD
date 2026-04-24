@@ -124,7 +124,12 @@ VISUALIZE    :     OpenSearch (DB)      <---( Indexing & Search )---->  DASHBOAR
     docker compose restart
 ```
 
-- 컨슈머 구동
+- json 관련 토픽 컨슈머 구동
 ```
     ./opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic factory-json-topic --from-beginning
+```
+
+- text 관련 토픽 컨슈머 구동
+```
+    ./opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic factory-text-topic --from-beginning
 ```
