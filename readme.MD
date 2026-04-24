@@ -116,3 +116,5 @@ VISUALIZE    :     OpenSearch (DB)      <---( Indexing & Search )---->  DASHBOAR
     - Service, Parser, Filter, Buffer, Routing
     - Output : Kafka/Opensearch/Elasticsearch/s3/... 모두 가능함
 - conf 구성 -> 규칙 기술
+- 지원 플러그인
+    - 1000여개 <-> 100여개
