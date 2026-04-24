@@ -2,7 +2,7 @@
 - kafka
 
 # repo
-- https://github.com/Luriar/kafka-local
+- https://github.com/edu-kenshi/kafka-local.git
 
 # 설치
 ```
@@ -17,18 +17,17 @@ pip install kafka-python
 # CLI 모드로 테스트
 ```
 # 접속
-# 호스트 PC
-PS C:\Users\HP\OneDrive\바탕 화면\projects\KAFKA-LOCAL> docker container exec -it kafka bash
+# 호스트  PC
+PS ~\kafka-local> docker container exec -it kafka bash
 
 # 컨테이너
-root@212a34622259:/# pwd
+root@4527e52ba5f6:/# pwd
 /
-root@212a34622259:/# cd /opt/kafka/bin
+root@4527e52ba5f6:/# cd /opt/kafka/bin
 
 # 토픽 생성
 # 파티션 1개로 관리, 복제본 1개로 관리되는 토픽 구성
 > kafka-topics.sh --create --topic spacex --bootstrap-server 127.0.0.1:9092 --partitions 1 --replication-factor 1
-```
 
 # 토픽 전송(프로듀서)
 > kafka-console-producer.sh --topic spacex --bootstrap-server 127.0.0.1:9092
@@ -36,9 +35,11 @@ root@212a34622259:/# cd /opt/kafka/bin
 # 컨슈머
 > kafka-console-consumer.sh --topic spacex --bootstrap-server 127.0.0.1:9092
 
-# local-datapipeline 목표 시스템
 ```
-[ LAYER ]          [ COMPONENT ]              [ PROTOCOL / ACTION ]             [ DATA FORMAT ]
+
+# local-datapipline 목표 시스템
+```
+[ LAYER ]          [ COMPONENT ]          [ PROTOCOL / ACTION ]            [ DATA FORMAT ]
 ====================================================================================================
 SOURCE       :     Python (log_gen.py)  ----( Write to File )---->  [ /sensor_logs/*.log ]
                |                                                                   |
@@ -63,9 +64,14 @@ MESSAGING    :     Kafka / MSK (Broker) <-------------------------------------+-
                |          +----( Topic A: factory-json-topic ) <--- [Channel A Result]
                |          +----( Topic B: factory-text-topic ) <--- [Channel B Result]
                v                                                               |
+               v                                                               |
+                                                                        kafka connect / ui
+                                                                                |
+                                                                                v               
 VISUALIZE    :     OpenSearch (DB)      <---( Indexing & Search )---->  DASHBOARD (Kibana)
 ====================================================================================================
 ```
+
 ```
 [ 계층 ]            [ 구성 요소 ]              [ 프로토콜 / 동작 ]              [ 데이터 형식 ]
 ====================================================================================================
@@ -92,9 +98,13 @@ VISUALIZE    :     OpenSearch (DB)      <---( Indexing & Search )---->  DASHBOAR
                |          +----( 토픽 A: factory-json-topic ) <--- [채널 A 결과물]
                |          +----( 토픽 B: factory-text-topic ) <--- [채널 B 결과물]
                v                                                                  |
+                                                                            kafka connect / ui
+                                                                                  |
+                                                                                  v
 시각화/분석  :     OpenSearch (DB)      <---( 인덱싱 및 검색 )------>  대시보드 (Kibana)
 ====================================================================================================
 ```
+
 
 # 프로젝트 재구성
 - docker-compose.yml 수정 (KRaft 적용된)
@@ -103,33 +113,110 @@ VISUALIZE    :     OpenSearch (DB)      <---( Indexing & Search )---->  DASHBOAR
     docker compose up -d
 ```
 
-# Fluentd (40~60MB) <-> Fluent-Bit (1~5MB)
+# Fluentd(40~60MB) <-> Fluent-Bit (1~5MB)
 - 태그 기반 라우팅 도구(Tag Based Routing)
-- Ruby(C 결합) 구조 <-> C
+- Ruby(C 결합) 구조 <-> C 
 - fluent-bit/etc/fluent-bit.conf 에서 구성 기술 완료
 - 목표
-    - 데이터 수집, 처리, 전달 -> ETL 도구
+    - 데이터 수집, 처리, 전달 => ETL 도구
     - 경량형 오픈 소스 로그 프로세서
     - 고가용성, 고성능 처리, 데이터 처리 안정성
-- 파이프라인
-    - Input : 파일, 시스템 매트릭, http 스트림, ... 다양한 소스 제공
-    - Service, Parser, Filter, Buffer, Routing
+- 파이프라인 
+    - Input : 파일, 시스템 매트릭, http 스트림, .. 다양한 소스 제공
+    - Service, Parser, Filter, Buffer, Rounting
     - Output : Kafka/Opensearch/Elasticsearch/s3/... 모두 가능함
-- conf 구성 -> 규칙 기술
-- 지원 플러그인
+- 지원 플러그인 
     - 1000여개 <-> 100여개
 
-- conf 구성 -> 규칙 기술
-```
+- conf 구성 => 규칙 기술
+    ```
     docker compose restart
+    ```
+
+- 커슈머 구동
+    ```
+        PS ...> docker exec -it kafka-local bash
+
+        # json 관련 토픽 커슈머
+        > ./opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic factory-json-topic --from-beginning
+
+        # text 관련 토픽 커슈머
+        > ./opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic factory-text-topic --from-beginning
+    ```
+
+- 로그 발생 -> 카프카 컨슈머 수시 확인
+    ```
+        python log_gen.py
+    ```
+    
+- conf가 수정되면
+    - `docker compose restart` 반드시 수행
+
+- 전달 내용
+    - http로 전달해서 데이터가 늘어났음, 
+    - forward등 전달 방식은 다양함
+        - forward 시도, 24224 포트 사용
+```
+{
+    "event":{
+        "original":"[{\"date\":1777005819.42045,\"log\":\"\\\"[2026-04-24 13:43:38] ID=AI-FACTORY-001 |   TEMP:87.5 |   HUMI:42.1 |   STAT:RUNNING\\\"\"}]"},
+        "host":{"ip":"172.19.0.3"},
+        "user_agent":{"original":"Fluent-Bit"},
+        "date":1.77700581942045E9,
+        "url":{
+            "path":"/",
+            "domain":"logstash",
+            "port":5044
+        },
+        "http":{
+            "version":"HTTP/1.1",
+            "method":"POST",
+            "request":{
+                "body":{
+                    "bytes":"124"
+                },
+                "mime_type":"application/json"
+            }
+        },
+        "log":"\"[2026-04-24 13:43:38] ID=AI-FACTORY-001 |   TEMP:87.5 |   HUMI:42.1 |   STAT:RUNNING\"","@version":"1",
+        "@timestamp":"2026-04-24T04:43:40.412003029Z"
+    }
+}
 ```
 
-- json 관련 토픽 컨슈머 구동
-```
-    ./opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic factory-json-topic --from-beginning
-```
+# 로그 형태
+- 참고
+    - 최초 데이터 => fluent-bit/logstash => 데이터 형태가 노이즈 많음!!(프토토콜때문에 추가된 내용이 많음) => 필터 역활 필요함
+    - 필터 보정 하는 내용 업데이트 (추후)
 
-- text 관련 토픽 컨슈머 구동
-```
-    ./opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic factory-text-topic --from-beginning
-```
+# kafka 대시보드
+- kafka ui
+- 메세지의 흐름, connect를 통해 전달이 잘되는지 등등 모니터링 
+
+# 로컬 -> 클라우드 연결
+- kafka connect => X (플러그인 자주 변경, 정책 변경)
+- 전용 포워더로 변경
+    - Vector는 Datadog에서 만든 초고속 데이터 파이프라인 도구
+    - Java 의존성이 없고 단일 실행 파일로 돌아가서 Kafka Connect보다 훨씬 가볍고 설치가 쉬움
+    - YAML 설정 파일 하나로 모든 게 끝남.
+    - 메모리 사용량이 매우 적음 (Rust 기반).
+    - 단축된 파이프라인: Kafka -> Vector -> Firehose 구조를 YAML 설정 하나로 끝
+- docker-compose.yml 수정 (이미 반영되어 있음)
+    ```
+        vector:
+            image: timberio/vector:0.36.0-debian # 최신 안정 버전
+            container_name: vector
+            volumes:
+                - ./vector.yaml:/etc/vector/vector.yaml:ro
+            environment:
+                # .env 파일에 정의된 AWS 인증 정보를 전달
+                AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY}"
+                AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_KEY}"
+                AWS_REGION: "${AWS_REGION}"
+            depends_on:
+                - kafka
+            networks:
+                - kafka-net
+    ```
+- vector.yaml 작성
+    - 파일 참고

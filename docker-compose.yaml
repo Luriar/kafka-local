@@ -47,6 +47,37 @@ services:
     networks:
       - kafka-net
 
+
+  # 4. Vector (Kafka -> Firehose 브릿지 역할)
+  vector:
+    image: timberio/vector:0.36.0-debian # 최신 안정 버전
+    container_name: vector
+    volumes:
+      - ./vector.yaml:/etc/vector/vector.yaml:ro
+    environment:
+      # .env 파일에 정의된 AWS 인증 정보를 전달
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_KEY}"
+      AWS_REGION: "${AWS_REGION}"
+    depends_on:
+      - kafka
+    networks:
+      - kafka-net
+
+  # 5. Kafka UI (kafka-connect 의존성 제거)
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8081:8080"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    networks:
+      - kafka-net
+      
 networks:
   kafka-net:
     driver: bridge
