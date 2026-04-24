@@ -28,10 +28,13 @@ def generate_logs():
     # json 형태로 파일 기록(한줄에 로그 1개씩) -> dict 객체의 직렬화 처리
     # 파일명 ./sensor_logs/sensor_json.log
     # 한줄에 JSON 객체 1개씩 문자열로 기록(JSON Lines : JSONL)
-    # 구현하시오
+    # 구현하시오, a: Append *파일에 추가 쓰기 모드
+    with open(f"{log_dir}/sensor_json.log", "a", encoding="utf-8") as f:
+        f.write( json.dumps(data) + "\n" )
 
     # text 형태로 파일 기록(한줄에 로그 1개씩) -> f-string 구성
     # 파일명 ./sensor_logs/sensor_text.log
+
     pass
 
 # 4. 로그 발생기 가동
