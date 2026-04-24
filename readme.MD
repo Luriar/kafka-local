@@ -118,3 +118,13 @@ VISUALIZE    :     OpenSearch (DB)      <---( Indexing & Search )---->  DASHBOAR
 - conf 구성 -> 규칙 기술
 - 지원 플러그인
     - 1000여개 <-> 100여개
+
+- conf 구성 -> 규칙 기술
+```
+    docker compose restart
+```
+
+- 컨슈머 구동
+```
+    ./opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic factory-json-topic --from-beginning
+```

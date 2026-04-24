@@ -45,3 +45,7 @@
 {"timestamp": "2026-04-24 10:40:24", "sensor_id": "AI-FACTORY-001", "temperature": 87.5, "humidity": 42.1, "status": "RUNNING"}
 {"timestamp": "2026-04-24 10:40:26", "sensor_id": "AI-FACTORY-001", "temperature": 87.5, "humidity": 42.1, "status": "RUNNING"}
 {"timestamp": "2026-04-24 10:40:28", "sensor_id": "AI-FACTORY-001", "temperature": 87.5, "humidity": 42.1, "status": "RUNNING"}
+{"timestamp": "2026-04-24 13:10:17", "sensor_id": "AI-FACTORY-001", "temperature": 87.5, "humidity": 42.1, "status": "RUNNING"}
+{"timestamp": "2026-04-24 13:10:19", "sensor_id": "AI-FACTORY-001", "temperature": 87.5, "humidity": 42.1, "status": "RUNNING"}
+{"timestamp": "2026-04-24 13:10:21", "sensor_id": "AI-FACTORY-001", "temperature": 87.5, "humidity": 42.1, "status": "RUNNING"}
+{"timestamp": "2026-04-24 13:10:23", "sensor_id": "AI-FACTORY-001", "temperature": 87.5, "humidity": 42.1, "status": "RUNNING"}
