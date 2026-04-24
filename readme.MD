@@ -35,3 +35,34 @@ root@212a34622259:/# cd /opt/kafka/bin
 
 # 컨슈머
 > kafka-console-consumer.sh --topic spacex --bootstrap-server 127.0.0.1:9092
+
+# local-datapipeline 목표 시스템
+```
+[ LAYER ]          [ COMPONENT ]              [ PROTOCOL / ACTION ]             [ DATA FORMAT ]
+====================================================================================================
+SOURCE       :     Python (log_gen.py)  ----( Write to File )---->  [ /sensor_logs/*.log ]
+               |                                                                   |
+               |                                                            ( Shared Volume )
+               v                                                                   |
+INGESTION    :     Fluent Bit (Agent)   <---( Tailing File  )----------------------+
+               |          |
+               |          | [ CHANNEL A: DIRECT BYPASS ]
+               |          +--------------------------------------------( Produce )--+
+               |          |                                                         |
+               |          | [ CHANNEL B: PROXY ROUTE  ]                             |
+               |          +----( Forward )----> [ Logstash ] ----( Produce )--+     |
+               |                                     |                        |     |
+               v                                     v                        v     v
+TRANSFORM    : (A: Bypass)  +--[ Grok    : Pattern Matching & Extract Fields   ]--+ |
+               |            +--[ Mutate  : Data Type Conversion (Str->Float)   ]--+ |
+               |            +--[ Tagging : Add Metadata for Conditional Alerts ]--+ |
+               |                                                              |     |
+MESSAGING    :     Kafka / MSK (Broker) <-------------------------------------+-----+
+               |          |             ( Merge Structured & Processed Data )
+               |          |
+               |          +----( Topic A: factory-json-topic ) <--- [Channel A Result]
+               |          +----( Topic B: factory-text-topic ) <--- [Channel B Result]
+               v                                                               |
+VISUALIZE    :     OpenSearch (DB)      <---( Indexing & Search )---->  DASHBOARD (Kibana)
+====================================================================================================
+```
