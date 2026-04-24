@@ -95,3 +95,24 @@ VISUALIZE    :     OpenSearch (DB)      <---( Indexing & Search )---->  DASHBOAR
 시각화/분석  :     OpenSearch (DB)      <---( 인덱싱 및 검색 )------>  대시보드 (Kibana)
 ====================================================================================================
 ```
+
+# 프로젝트 재구성
+- docker-compose.yml 수정 (KRaft 적용된)
+```
+    docker compose down
+    docker compose up -d
+```
+
+# Fluentd (40~60MB) <-> Fluent-Bit (1~5MB)
+- 태그 기반 라우팅 도구(Tag Based Routing)
+- Ruby(C 결합) 구조 <-> C
+- fluent-bit/etc/fluent-bit.conf 에서 구성 기술 완료
+- 목표
+    - 데이터 수집, 처리, 전달 -> ETL 도구
+    - 경량형 오픈 소스 로그 프로세서
+    - 고가용성, 고성능 처리, 데이터 처리 안정성
+- 파이프라인
+    - Input : 파일, 시스템 매트릭, http 스트림, ... 다양한 소스 제공
+    - Service, Parser, Filter, Buffer, Routing
+    - Output : Kafka/Opensearch/Elasticsearch/s3/... 모두 가능함
+- conf 구성 -> 규칙 기술
